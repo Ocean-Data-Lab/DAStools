@@ -28,6 +28,34 @@ def compute_psd(data_sel,avg_time,L_fft,overlap,fs):
     return t, f, psd
 
 def beamf(data,dist,f,fs,fmin,fmax):
+    '''
+    beamf - beamform data
+
+    Parameters
+    ----------
+    data : array
+        data to beamform
+    dist : float
+        distance between sensors
+    f : array
+        frequency for beamforming
+    fs : float
+        sampling frequency
+    fmin : float
+        minimum frequency for beamforming
+    fmax : float
+        maximum frequency for beamforming
+
+    Returns
+    -------
+    theta : array
+        angle of arrival
+    B : array
+        beamformed data
+    theta_max : float
+        maximum angle of arrival
+
+    '''
     c = 1500     
     nx = len(data)
     ns = len(data[0])
