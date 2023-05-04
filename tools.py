@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pandas as pd
 from scipy import signal, ndimage
+import dask
 
 def fk_filt_chunk(data,tint,fs,xint,dx,c_min,c_max):
     '''
@@ -79,6 +80,79 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     data_gx = data.map_blocks(fk_filt_chunk, kwargs=kwargs, template=data)
     return data_gx
 
+def _energy_TimeDomain_chunk(da, time_dim='time'):
+    '''
+    _energy_TimeDomain_chunk - chunkwise function for energy_TimeDomain
+
+    Parameters
+    ----------
+    da : xr.DataArray
+        DataArray containing DAS data
+    time_dim : string
+        time dimension of da
+    
+    Returns
+    -------
+    da_energy : xr.DataArray
+        DataArray containing energy in time domain. Units are V^2 (where V is units of da)
+    '''
+    
+    return (da**2).sum(time_dim, keepdims=True)
+
+def energy_TimeDomain(da, time_dim='time'):
+    '''
+    energy_TimeDomain - calculate energy in time domain using parsevals theorem
+        energy is calculated for each chunk in time_dim
+    
+    Parameters
+    ----------
+    da : xr.DataArray
+        DataArray containing DAS data
+    time_dim : string
+        time dimension of da
+
+    Returns
+    -------
+    da_energy : xr.DataArray
+        DataArray containing energy in time domain. Units are V^2 (where V is units of da)
+    '''
+    # move time_dim to last dimension
+    da = da.transpose(..., time_dim)
+
+    # Get number of chunks in each dimension
+    original_dims = list(da.dims)
+
+    original_chunksize = dict(zip(original_dims, da.data.chunksize))
+    nchunks = []
+
+    for k, single_dim in enumerate(original_dims):
+        nchunks.append(da.shape[k]/original_chunksize[single_dim])
+    nchunks = dict(zip(original_dims, nchunks))
+
+    # get size of output
+    sizes_dict = dict(da.sizes)
+    sizes_dict.pop(time_dim)
+    output_sizes = list(sizes_dict.values()) + [nchunks[time_dim]]
+
+
+    # define new chunk sizes
+    new_chunk_sizes = {}
+    for k, item in enumerate(da.dims):
+        if item == time_dim:
+            new_chunk_sizes[item] = 1
+        else:
+            new_chunk_sizes[item] = original_chunksize[item]
+    
+    # create template for xarray.map_blocks
+    template = xr.DataArray(
+        dask.array.random.random(
+            output_sizes, chunks=list(new_chunk_sizes.values())),
+        dims=da.dims,
+        name=f'energy in {time_dim} dimension')
+
+    da_energy = da.map_blocks(_energy_TimeDomain_chunk, template=template, kwargs={'time_dim':time_dim})
+
+    return da_energy
 
 # I think everything below this is implemented in xrsignal
 def filtfilt(da, dim, **kwargs):
