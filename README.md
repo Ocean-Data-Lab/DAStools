@@ -10,3 +10,17 @@ A related repository is John-Ragland/xrsignal, which implements various scipy.si
 - das_chunk.py
     - implementations of dasfuncs and other functions on single chunks of data.
     - also includes associated functions that map these (using xarray.map_blocks), to an entire array
+
+## Install
+*Non-definitive version before PyPi deployment*
+
+Clone this repository:
+
+```shell
+    git clone git@github.com:Ocean-Data-Lab/DAStools.git
+```
+Install it using pip (this can be done in a virtual environment such as [conda](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#) or [python venv](https://docs.python.org/3/library/venv.html)) : 
+
+```shell
+    pip install -e
+```
