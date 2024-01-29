@@ -22,5 +22,6 @@ Clone this repository:
 Install it using pip (this can be done in a virtual environment such as [conda](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#) or [python venv](https://docs.python.org/3/library/venv.html)) : 
 
 ```shell
+    cd DAStools/
     pip install -e .
 ```

@@ -1,0 +1,8 @@
+dask==2024.1.0
+h5py==3.10.0
+kerchunk==0.2.2
+matplotlib==3.8.2
+numpy==1.26.3
+scipy==1.12.0
+xarray==2023.12.0
+zarr==2.16.1
