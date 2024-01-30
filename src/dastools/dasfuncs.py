@@ -16,7 +16,28 @@ from scipy import signal
 from scipy.signal import butter, sosfilt, tukey, detrend, filtfilt
 from scipy.ndimage import gaussian_filter
 
+
 def compute_psd(data_sel,avg_time,L_fft,overlap,fs):
+    """_summary_
+
+    Parameters
+    ----------
+    data_sel : _type_
+        _description_
+    avg_time : _type_
+        _description_
+    L_fft : _type_
+        _description_
+    overlap : _type_
+        _description_
+    fs : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """    
     t = []
     psd = []
     ns = len(data_sel)
@@ -26,6 +47,7 @@ def compute_psd(data_sel,avg_time,L_fft,overlap,fs):
         psd.append(Pxx)
         t.append(n*avg_time)
     return t, f, psd
+
 
 def beamf(data,dist,f,fs,fmin,fmax):
     '''
@@ -75,10 +97,12 @@ def beamf(data,dist,f,fs,fmin,fmax):
     theta_max = theta[np.abs(B) == max(np.abs(B))][0]
     return theta,B,theta_max
 
+
 def bp_filt(data,tint,fs,fmin,fmax):
     b, a = sp.butter(8,[fmin/(fs/2),fmax/(fs/2)],'bp')
     tr_filt = sp.filtfilt(b,a,data.astype(float),axis = 1)
     return tr_filt
+
 
 def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     data_fft = fft2(detrend(data))
@@ -108,6 +132,7 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     data_g = ifft2(ifftshift(data_fft_g))
     
     return f,k,g,data_fft_g,data_g
+
 
 def array_geo(nx,dx,cable_name):
     if cable_name == 'north':
@@ -149,6 +174,7 @@ def array_geo(nx,dx,cable_name):
     cable_loc = {'Lat': lat, 'Lon': lon, 'Dist': du,'Depth': depth,'First2Last_ChannelIndex': c}
     return cable_loc 
 
+
 def get_metadata_optasense(fp1):
     fs = fp1['Acquisition']['Raw[0]'].attrs['OutputDataRate'] # sampling rate in Hz
     dx = fp1['Acquisition'].attrs['SpatialSamplingInterval'] # channel spacing in m
@@ -159,13 +185,15 @@ def get_metadata_optasense(fp1):
     scale_factor = (2*np.pi)/2**16 * (1550.12 * 1e-9)/(0.78 * 4 * np.pi * n * GL)
 
     meta_data = {'fs': fs, 'dx': dx, 'ns': ns,'n': n,'GL': GL, 'nx':nx , 'scale_factor': scale_factor}
-    return meta_data 
+    return meta_data
+
 
 def axvlines(ax = None, xs = [0, 1], ymin=0, ymax=1, **kwargs):
     ax = ax or plt.gca()
     for x in xs:
         ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
-        
+
+
 def plot_waterfall(data,dist,timestamp,vmin,vmax,xmin,xmax,xint,df_loc,add_bathymetry):
     fig, ax = plt.subplots(figsize=(12,10))
     np.abs(np.log10(np.abs(data.T))).plot(robust=True, cmap='Greys_r',norm = LogNorm(vmin = vmin, vmax=vmax), add_colorbar=False)

@@ -12,7 +12,7 @@ A related repository is John-Ragland/xrsignal, which implements various scipy.si
     - also includes associated functions that map these (using xarray.map_blocks), to an entire array
 
 ## Install
-*Non-definitive version before PyPi deployment*
+*Development version*
 
 Clone this repository:
 
