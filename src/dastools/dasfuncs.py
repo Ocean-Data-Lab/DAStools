@@ -18,25 +18,37 @@ from scipy.ndimage import gaussian_filter
 
 
 def compute_psd(data_sel,avg_time,L_fft,overlap,fs):
-    """_summary_
+    """Compute Power Spectral Density (PSD) using the Welch method.
 
     Parameters
     ----------
-    data_sel : _type_
-        _description_
-    avg_time : _type_
-        _description_
-    L_fft : _type_
-        _description_
-    overlap : _type_
-        _description_
-    fs : _type_
-        _description_
+    data_sel : array-like
+        Input signal data.
+    avg_time : float
+        Length of the segments for averaging in seconds.
+    L_fft : int
+        Length of the FFT used for each segment.
+    overlap : float
+        Overlap between segments (fraction of segment length).
+    fs : float
+        Sampling frequency of the signal.
 
     Returns
     -------
-    _type_
-        _description_
+    t : list
+        Time values corresponding to each PSD estimate.
+    f : array
+        Frequency values.
+    psd : list of arrays
+        Power Spectral Density estimates for each time segment.
+
+    Notes
+    -----
+    The function uses the Welch method to estimate the PSD. It divides the input signal into overlapping
+    segments, applies a windowing function (Hann window by default), computes the FFT for each segment, 
+    and averages the resulting power spectral densities. The function returns time values (t), frequency values (f), and the corresponding PSD estimates (psd).
+
+    The frequency values (f) and PSD estimates (psd) can be used to visualize the time-dependent frequency content of the signal using plots such as spectrograms or line plots.
     """    
     t = []
     psd = []

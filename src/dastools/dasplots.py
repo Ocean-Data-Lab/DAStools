@@ -35,13 +35,14 @@ def plot_psd(data, metadata, channels=[2500,7500,15000,30000]):
         tr = data[chan,:].astype(float) # get the data at each channel
         tr -= np.mean(tr) # remove the mean
         tr *= metadata['scale_factor'] # convert to strain
-        ftr1 = 20 * np.log10(2 * abs(np.fft.rfft(tr * np.hamming(metadata['ns']))) / metadata['ns'])
-        t, freqs, ftr = dasfuncs.compute_psd(tr, 5, int(metadata["fs"] * 5), 0.1, metadata['fs'])
-        plt.semilogx(freqs, np.mean(ftr, axis=0))
-        plt.semilogx(freqs1, ftr1)
+        ftr1 = 10 * np.log10(abs(np.fft.rfft(tr * np.hamming(metadata['ns']))) **2 / (metadata['ns'] * metadata['fs']))
+        t, freqs, ftr = dasfuncs.compute_psd(tr, 10, 2**11, 0.5, metadata['fs'])
+        plt.semilogx(freqs1, ftr1,label='discrete PSD')
+        plt.semilogx(freqs,np.mean(ftr, axis=0),label='Welch method') # np.mean(ftr, axis=0)
+        plt.legend()
     
     plt.xlabel('Frequency [Hz]')
-    plt.ylabel('PSD [-]')
+    plt.ylabel('PSD [dB.Hz$^{-1}$]')
     plt.xlim(0.01, fmax)
     plt.grid()
     plt.draw()
