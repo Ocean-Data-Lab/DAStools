@@ -54,7 +54,9 @@ def compute_psd(data_sel,avg_time,L_fft,overlap,fs):
     psd = []
     ns = len(data_sel)
     for n in range(int(ns/(fs*avg_time))-1):
+        # Use the Welch method on each time segments
         f, Pxx = signal.welch(x=data_sel.data[n * int(fs * avg_time) : (n + 1) * int(fs * avg_time)], fs=fs, window='hann' , nperseg=L_fft, noverlap=int(L_fft * overlap), nfft=L_fft,average='mean')
+        # Convert the PSD in dB/Hz
         Pxx = 10 * np.log10(Pxx)
         psd.append(Pxx)
         t.append(n*avg_time)
@@ -206,25 +208,26 @@ def axvlines(ax = None, xs = [0, 1], ymin=0, ymax=1, **kwargs):
         ax.axvline(x, ymin=ymin, ymax=ymax, **kwargs)
 
 
-def plot_waterfall(data,dist,timestamp,vmin,vmax,xmin,xmax,xint,df_loc,add_bathymetry):
-    fig, ax = plt.subplots(figsize=(12,10))
-    np.abs(np.log10(np.abs(data.T))).plot(robust=True, cmap='Greys_r',norm = LogNorm(vmin = vmin, vmax=vmax), add_colorbar=False)
-    plt.xlabel('Distance, m')
-    plt.ylabel('Time, s')
-    ax.set_xticks(np.arange(0,70000,5000))
-    plt.xlim(dist[0],dist[-1])
-    plt.ylim(timestamp[0],timestamp[-1]) 
-    plt.gca().invert_xaxis()
-    
-    if add_bathymetry == 'True':
-        ax2 = fig.add_axes([0.125, 0.9, 0.775, 0.1])
-        #plt.gca().xaxis.tick_up()
-        ax2.xaxis.tick_top()
-        plt.plot(np.arange(int(xmin/dx),int(xmax/dx),xint),df_loc['Depth'][int(xmin/dx):int(xmax/dx):xint], color='black', linewidth = 3, zorder = 90, label = 'Bathymetry')
-        plt.xlim([int(xmin/dx), int(xmax/dx)])
-        plt.grid(True)
-        plt.ylim([np.min(df_loc['Depth'][int(xmin/dx):int(xmax/dx):xint]), np.max(df_loc['Depth'][int(xmin/dx):int(xmax/dx):xint])])
-        plt.xticks([])
-        plt.title("Bathymetry")
+def scale(data, metadata):
+    """Convert a data array from the OptaSENSE HDF5 int32 format to a numpy array of float32 strain values.
 
-    plt.rcParams.update({'font.size': 38})
+    Parameters
+    ----------
+    data : np.ndarray
+        The input data array in OptaSENSE HDF5 int32 format.
+    metadata : dict
+        A dictionary containing metadata information, including the 'scale_factor'.
+
+    Returns
+    -------
+    np.ndarray
+        A numpy array of float32 strain values.
+    """
+    # TODO: adapt to xarrays/daskarray
+    tr = data.astype(np.float64) # convert the data
+    # remove the mean along the time dimension for each channels
+    tr -= np.mean(tr, axis=1, keepdims=True)
+    tr *= metadata['scale_factor'] # convert to strain
+    return tr
+
+# plt.rcParams.update({'font.size': 38})

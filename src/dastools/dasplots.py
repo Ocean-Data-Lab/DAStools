@@ -47,3 +47,29 @@ def plot_psd(data, metadata, channels=[2500,7500,15000,30000]):
     plt.grid()
     plt.draw()
     return
+
+
+def plot_waterfall(data,dist,timestamp,vmin,vmax,xmin,xmax,xint,df_loc=None,add_bathymetry=False):
+    fig, ax = plt.subplots(figsize=(12,10))
+    # Version for an xarray:
+    # np.abs(np.log10(np.abs(data.T))).plot(robust=True, cmap='Greys_r',norm = LogNorm(vmin = vmin, vmax=vmax), add_colorbar=False)
+    plt.imshow(data.T,extent=[min(dist)*1e-3,max(dist)*1e-3,min(timestamp),max(timestamp)],aspect='auto',\
+             origin='lower',cmap='RdBu')
+    plt.xlabel('Distance, km')
+    plt.ylabel('Time, s')
+    # ax.set_xticks(np.arange(0,70000,5000))
+    # plt.xlim(dist[0],dist[-1])
+    # plt.ylim(timestamp[0],timestamp[-1]) 
+    # plt.gca().invert_xaxis()
+    
+    if add_bathymetry == 'True':
+        ax2 = fig.add_axes([0.125, 0.9, 0.775, 0.1])
+        #plt.gca().xaxis.tick_up()
+        ax2.xaxis.tick_top()
+        plt.plot(np.arange(int(xmin/dx),int(xmax/dx),xint),df_loc['Depth'][int(xmin/dx):int(xmax/dx):xint], color='black', linewidth = 3, zorder = 90, label = 'Bathymetry')
+        plt.xlim([int(xmin/dx), int(xmax/dx)])
+        plt.grid(True)
+        plt.ylim([np.min(df_loc['Depth'][int(xmin/dx):int(xmax/dx):xint]), np.max(df_loc['Depth'][int(xmin/dx):int(xmax/dx):xint])])
+        plt.xticks([])
+        plt.title("Bathymetry")
+    return
