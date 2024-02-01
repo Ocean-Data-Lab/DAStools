@@ -24,7 +24,23 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+    "dask",
+    "geopy",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "pyproj",
+    "pytest",
+    "scipy",
+    "xarray",
+    "h5py"
+]
+
+[project.optional-dependencies]
+dependencies = [
+    "pyQt6"
+]
 
 [project.urls]
 Documentation = "https://github.com/unknown/dastools#readme"
