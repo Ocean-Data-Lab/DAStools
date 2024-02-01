@@ -8,6 +8,17 @@ import matplotlib.pyplot as plt
 from dastools import dasfuncs
 
 def plot_trace(data, metadata, channels=[2500,7500,15000,30000]):
+    """Plot the strain time series of channels given in optional argument
+
+    Parameters
+    ----------
+    data : array-like
+        array in h5 format
+    metadata : dict
+        filled with the measurements metadata
+    channels : list, optional
+        list of channel indexes, by default [2500,7500,15000,30000]
+    """    
 
     time = np.arange(metadata['ns']) / metadata['fs']
     tmax = time.max()  # metadata['ns'] / metadata['fs']
@@ -28,6 +39,17 @@ def plot_trace(data, metadata, channels=[2500,7500,15000,30000]):
 
 
 def plot_psd(data, metadata, channels=[2500,7500,15000,30000]):
+    """Plot the PSD of signals at channels given in optional argument
+
+    Parameters
+    ----------
+    data : array-like
+        data in h5 format
+    metadata : dict
+        filled with the measurements metadata
+    channels : list, optional
+        list of channel indexes, by default [2500,7500,15000,30000]
+    """    
 
     freqs1 = np.fft.rfftfreq(metadata['ns'], 1/metadata['fs'])
     fmax = freqs1.max()
@@ -36,7 +58,7 @@ def plot_psd(data, metadata, channels=[2500,7500,15000,30000]):
         tr -= np.mean(tr) # remove the mean
         tr *= metadata['scale_factor'] # convert to strain
         ftr1 = 10 * np.log10(abs(np.fft.rfft(tr * np.hamming(metadata['ns']))) **2 / (metadata['ns'] * metadata['fs']))
-        t, freqs, ftr = dasfuncs.compute_psd(tr, 10, 2**11, 0.5, metadata['fs'])
+        t, freqs, ftr = dasfuncs.compute_psd(tr, 10, 2**10, 0.4, metadata['fs'])
         plt.semilogx(freqs1, ftr1,label='discrete PSD')
         plt.semilogx(freqs,np.mean(ftr, axis=0),label='Welch method') # np.mean(ftr, axis=0)
         plt.legend()
@@ -49,12 +71,12 @@ def plot_psd(data, metadata, channels=[2500,7500,15000,30000]):
     return
 
 
-def plot_waterfall(data,dist,timestamp,vmin,vmax,xmin,xmax,xint,df_loc=None,add_bathymetry=False):
+def plot_waterfall(data,dist,timestamp,vmin,vmax,xmin,xmax,xint,df_loc=None,add_bathymetry=False, cmap='RdBu'):
     fig, ax = plt.subplots(figsize=(12,10))
     # Version for an xarray:
     # np.abs(np.log10(np.abs(data.T))).plot(robust=True, cmap='Greys_r',norm = LogNorm(vmin = vmin, vmax=vmax), add_colorbar=False)
     plt.imshow(data.T,extent=[min(dist)*1e-3,max(dist)*1e-3,min(timestamp),max(timestamp)],aspect='auto',\
-             origin='lower',cmap='RdBu')
+             origin='lower',cmap=cmap,vmin=vmin, vmax=vmax)
     plt.xlabel('Distance, km')
     plt.ylabel('Time, s')
     # ax.set_xticks(np.arange(0,70000,5000))

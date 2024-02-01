@@ -112,13 +112,14 @@ def beamf(data,dist,f,fs,fmin,fmax):
     return theta,B,theta_max
 
 
-def bp_filt(data,tint,fs,fmin,fmax):
+def bp_filt(data,fs,fmin,fmax):
     b, a = sp.butter(8,[fmin/(fs/2),fmax/(fs/2)],'bp')
-    tr_filt = sp.filtfilt(b,a,data.astype(float),axis = 1)
+    tr_filt = sp.filtfilt(b,a,data,axis = 1)
     return tr_filt
 
 
 def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
+    # Perform 2D Fourier Transform on the detrended input data
     data_fft = fft2(detrend(data))
     # Make freq and wavenum vectors
     nx = data_fft.shape[0]
@@ -127,25 +128,32 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     k = fftshift(fftfreq(nx, d = xint*dx))
     ff,kk = np.meshgrid(f,k)
 
+    #  Define a filter in the f-k domain
     # Soundwaves have f/k = c so f = k*c
 
     g = 1.0*((ff < kk*c_min) & (ff < -kk*c_min))
     g2 = 1.0*((ff < kk*c_max) & (ff < -kk*c_max))
 
+    # Symmetrize the filter
     g = g + np.fliplr(g)
     g2 = g2 + np.fliplr(g2)
     g = g-g2
+    
+    # Apply Gaussian filter to the f-k filter
     g = gaussian_filter(g, 40)
     # epsilon = 0.0001
     # g = np.exp (-epsilon*( ff-kk*c)**2 )
 
+    # Normalize the filter to values between 0 and 1
     g = (g - np.min(g.flatten())) / (np.max(g.flatten()) - np.min(g.flatten()))
     g = g.astype('f')
 
+    # Apply the filter to the 2D Fourier-transformed data
     data_fft_g = fftshift(data_fft) * g
+    # Perform inverse Fourier Transform to obtain the filtered data in t-x domain
     data_g = ifft2(ifftshift(data_fft_g))
     
-    return f,k,g,data_fft_g,data_g
+    return f,k,g,data_fft_g,data_g.real
 
 
 def array_geo(nx,dx,cable_name):
