@@ -80,6 +80,7 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     data_gx = data.map_blocks(fk_filt_chunk, kwargs=kwargs, template=data)
     return data_gx
 
+
 def _energy_TimeDomain_chunk(da, time_dim='time'):
     '''
     _energy_TimeDomain_chunk - chunkwise function for energy_TimeDomain
@@ -98,6 +99,7 @@ def _energy_TimeDomain_chunk(da, time_dim='time'):
     '''
     
     return (da**2).sum(time_dim, keepdims=True)
+
 
 def energy_TimeDomain(da, time_dim='time'):
     '''
@@ -154,6 +156,7 @@ def energy_TimeDomain(da, time_dim='time'):
 
     return da_energy
 
+
 # I think everything below this is implemented in xrsignal
 def filtfilt(da, dim, **kwargs):
     '''
@@ -183,6 +186,7 @@ def filtfilt(da, dim, **kwargs):
 
     return da_filt
 
+
 def filtfilt_chunk(da, dim='time', **kwargs):
     '''
     converts dataarray to numpy, sends it to signal.filtfilt and then reinhereits all coordinates
@@ -204,9 +208,10 @@ def filtfilt_chunk(da, dim='time', **kwargs):
 
     return da_filtx
 
+
 def spec(da):
     '''
-    very quick implentation to calculate spectrogram
+    very quick implementation to calculate spectrogram
         PSD is calculated for every chunk
     
     Currently hardcoded for chunk size of 3000 in time
@@ -218,6 +223,7 @@ def spec(da):
 
     template = xr.DataArray(np.ones((int(da.sizes['time']/3000), 513)), dims=['time','frequency']).chunk({'time':1, 'frequency':513})
     return da.map_blocks(__spec_chunk, template=template)
+
 
 def __spec_chunk(da):
     '''

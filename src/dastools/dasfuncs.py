@@ -119,6 +119,40 @@ def bp_filt(data,fs,fmin,fmax):
 
 
 def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
+    """fk_filt - perform fk filtering on an array of DAS data   
+
+    Parameters
+    ----------
+    data : array-like
+        array containing wave signal from DAS data
+    tint : float
+        decimation time interval between considered samples
+    fs : float
+        sampling frequency
+    xint : float
+        decimation space interval between considered samples
+    dx : float
+        spatial resolution
+    c_min : float
+        minimum phase speed for the pass-band filter in f-k domain
+    c_max : float
+        maximum phase speed for the pass-band filter in f-k domain
+
+    Returns
+    -------
+    f : array-like
+        vector of frequencies
+
+    k : array-like
+        vector of wavenumbers   
+    g : array-like
+        2D designed gaussian filter
+    data_fft_g: array-like
+        2D Fourier transformed data, filtered by g
+    data_g.real: array-like
+        Real value of spatiotemporal filtered data
+    """    
+
     # Perform 2D Fourier Transform on the detrended input data
     data_fft = fft2(detrend(data))
     # Make freq and wavenum vectors
@@ -153,7 +187,7 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     # Perform inverse Fourier Transform to obtain the filtered data in t-x domain
     data_g = ifft2(ifftshift(data_fft_g))
     
-    return f,k,g,data_fft_g,data_g.real
+    return f, k, g, data_fft_g, data_g.real
 
 
 def array_geo(nx,dx,cable_name):
