@@ -156,7 +156,7 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     """    
 
     # Perform 2D Fourier Transform on the detrended input data
-    data_fft = fft2(detrend(data))
+    data_fft = fft2(data)
     # Make freq and wavenum vectors
     nx = data_fft.shape[0]
     ns = data_fft.shape[1]
@@ -173,11 +173,11 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     # Symmetrize the filter
     g += np.fliplr(g)
     # g2 += np.fliplr(g2)
-    # g -= g2 + np.fliplr(g2) # combine to have g = g - g2
+    g -= g2 + np.fliplr(g2) # combine to have g = g - g2
     
     # Apply Gaussian filter to the f-k filter
     # Tuning the standard deviation of the filter can improve computational efficiency
-    # g = gaussian_filter(g, 40)
+    g = gaussian_filter(g, 20)
     # epsilon = 0.0001
     # g = np.exp (-epsilon*( ff-kk*c)**2 )
 
