@@ -8,6 +8,8 @@ from numpy.fft import fft2, fftfreq, fftshift, ifft2, ifftshift
 import scipy.signal as sp
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
+import os
+import wget
 from matplotlib.colors import LogNorm
 from datetime import datetime
 import geopy.distance
@@ -169,25 +171,26 @@ def fk_filt(data,tint,fs,xint,dx,c_min,c_max):
     g2 = 1.0*((ff < kk*c_max) & (ff < -kk*c_max))
 
     # Symmetrize the filter
-    g = g + np.fliplr(g)
-    g2 = g2 + np.fliplr(g2)
-    g = g-g2
+    g += np.fliplr(g)
+    # g2 += np.fliplr(g2)
+    # g -= g2 + np.fliplr(g2) # combine to have g = g - g2
     
     # Apply Gaussian filter to the f-k filter
-    g = gaussian_filter(g, 40)
+    # Tuning the standard deviation of the filter can improve computational efficiency
+    # g = gaussian_filter(g, 40)
     # epsilon = 0.0001
     # g = np.exp (-epsilon*( ff-kk*c)**2 )
 
     # Normalize the filter to values between 0 and 1
-    g = (g - np.min(g.flatten())) / (np.max(g.flatten()) - np.min(g.flatten()))
-    g = g.astype('f')
+    g = (g - np.min(g)) / (np.max(g) - np.min(g))
 
     # Apply the filter to the 2D Fourier-transformed data
     data_fft_g = fftshift(data_fft) * g
     # Perform inverse Fourier Transform to obtain the filtered data in t-x domain
     data_g = ifft2(ifftshift(data_fft_g))
     
-    return f, k, g, data_fft_g, data_g.real
+    # return f, k, g, data_fft_g, data_g.real
+    return data_g.real
 
 
 def array_geo(nx,dx,cable_name):
@@ -271,5 +274,30 @@ def scale(data, metadata):
     tr -= np.mean(tr, axis=1, keepdims=True)
     tr *= metadata['scale_factor'] # convert to strain
     return tr
+
+
+def dl_file(url):
+    """Download the file at the given url
+
+    Parameters
+    ----------
+    url : string
+        url location of the file
+
+    Returns
+    -------
+    filepath : string
+        local path destination of the file
+    """    
+    filename = url.split('/')[-1]
+    filepath = os.path.join('data',filename)
+    if os.path.exists(filepath) == True:
+        print(f'{filename} already stored locally')
+    else:
+        # Create the data subfolder if it doesn't exist
+        os.makedirs('data', exist_ok=True)
+        wget.download(url, out='data', bar=wget.bar_adaptive)
+    return filepath
+
 
 # plt.rcParams.update({'font.size': 38})
