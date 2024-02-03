@@ -3,6 +3,6 @@ __pycache__/
 venv/
 data/
 _version.py
-tutorial.ipynb
+dastools_test.ipynb
 DAS4Whales/
 .vscode/
