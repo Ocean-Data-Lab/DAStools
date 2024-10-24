@@ -82,7 +82,7 @@ def stream_file_to_nas(http_url, nas_path):
             for chunk in response.iter_content(chunk_size=1048576):  # Larger chunk size for faster transfer
                 if chunk:  # Filter out keep-alive new chunks
                     f.write(chunk)
-        logger.info(f"File successfully streamed to: {nas_path.parent}")
+        logger.info(f"Streamed file {os.path.basename(nas_path)} to {os.path.basename(nas_path.parent)}")
     else:
         logger.error(f"Failed to download file {http_url}. HTTP Status code: {response.status_code}")
 
