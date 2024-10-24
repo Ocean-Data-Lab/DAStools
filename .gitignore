@@ -6,3 +6,5 @@ _version.py
 dastools_test.ipynb
 DAS4Whales/
 .vscode/
+# log files
+*.log
