@@ -6,6 +6,9 @@ import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from tqdm import tqdm
+from pathlib import Path
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 
 def list_files_in_directory(http_url):
@@ -40,28 +43,38 @@ def create_nested_directory(nas_base_path, http_url):
 
     return nas_path
 
+
+def get_request_with_retry(url, retries=3, backoff_factor=0.3):
+    """Get a request with retries and backoff for robustness against network issues."""
+    session = requests.Session()
+    retry = Retry(total=retries, backoff_factor=backoff_factor, status_forcelist=[500, 502, 503, 504])
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    
+    return session.get(url, stream=True)
+
 def stream_file_to_nas(http_url, nas_path):
-    """Stream a file from an HTTP server directly to the NAS with a progress bar."""
-    response = requests.get(http_url, stream=True)
+    """Stream a file from an HTTP server directly to the NAS with retries and improved path handling."""
+    response = get_request_with_retry(http_url)
     
     if response.status_code == 200:
         total_size = int(response.headers.get('content-length', 0))  # Get total file size
-        file_exists = os.path.exists(nas_path)
-
-        # If file exists, check its size to avoid re-downloading
-        if file_exists and os.path.getsize(nas_path) == total_size:
-            # print(f"File {os.path.basename(nas_path)} already exists and is fully downloaded.")
+        nas_path = Path(nas_path)
+        
+        # If file exists and size matches, skip the download
+        if nas_path.exists() and nas_path.stat().st_size == total_size:
             return  # Skip the file
 
+        # Stream and save the file
         with open(nas_path, 'wb') as f:
-            # Initialize tqdm progress bar
-            filename = os.path.basename(nas_path)
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:  # filter out keep-alive new chunks
+            for chunk in response.iter_content(chunk_size=65536):  # Larger chunk size for faster transfer
+                if chunk:  # Filter out keep-alive new chunks
                     f.write(chunk)
-        # print(f"File successfully streamed to: {os.path.split(nas_path)[-2]}")
+        print(f"File successfully streamed to: {nas_path.parent}")
     else:
-        print(f"Failed to download file. HTTP Status code: {response.status_code}")
+        print(f"Failed to download file {http_url}. HTTP Status code: {response.status_code}")
+
 
 def download_and_stream_files(http_url, nas_base_directory):
     # Get list of files and folders
