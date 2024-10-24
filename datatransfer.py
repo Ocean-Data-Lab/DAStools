@@ -1,6 +1,7 @@
 
 ## Script transfer data from OOI Piweb server to ODL NAS
 
+import logging
 import requests
 import os
 from bs4 import BeautifulSoup
@@ -9,6 +10,15 @@ from tqdm import tqdm
 from pathlib import Path
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
+# Set up logging
+logging.basicConfig(
+    filename='transfer_log.log',  # Log file name
+    filemode='a',  # Append to the log file
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO  # Log only INFO level and above
+)
+logger = logging.getLogger()
 
 
 def list_files_in_directory(http_url):
@@ -54,6 +64,7 @@ def get_request_with_retry(url, retries=3, backoff_factor=0.3):
     
     return session.get(url, stream=True)
 
+
 def stream_file_to_nas(http_url, nas_path):
     """Stream a file from an HTTP server directly to the NAS with retries and improved path handling."""
     response = get_request_with_retry(http_url)
@@ -68,13 +79,12 @@ def stream_file_to_nas(http_url, nas_path):
 
         # Stream and save the file
         with open(nas_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=65536):  # Larger chunk size for faster transfer
+            for chunk in response.iter_content(chunk_size=1048576):  # Larger chunk size for faster transfer
                 if chunk:  # Filter out keep-alive new chunks
                     f.write(chunk)
-        print(f"File successfully streamed to: {nas_path.parent}")
+        logger.info(f"File successfully streamed to: {nas_path.parent}")
     else:
-        print(f"Failed to download file {http_url}. HTTP Status code: {response.status_code}")
-
+        logger.error(f"Failed to download file {http_url}. HTTP Status code: {response.status_code}")
 
 def download_and_stream_files(http_url, nas_base_directory):
     # Get list of files and folders
@@ -90,7 +100,7 @@ def download_and_stream_files(http_url, nas_base_directory):
                     # Stream the file directly to the NAS
                     stream_file_to_nas(file_url, nas_path)
                 except Exception as e:
-                    print(f"Failed to stream {file_url} to {nas_path}: {e}")
+                    logger.error(f"Failed to stream {file_url} to {nas_path}: {e}")
                 progress_bar.update(1)
 
     # Recursively process each folder, until file_links is not empty anymore
